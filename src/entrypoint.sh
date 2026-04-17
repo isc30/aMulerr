@@ -8,7 +8,12 @@ function run_amule() {
 }
 
 function choose_emulerr_user() {
-    # 1. prefer the user "amule" if it exists
+    # 1. wait up to 15s for the "amule" user to be ready (created by a parallel script)
+    local waited=0
+    while ! id amule &>/dev/null && [ $waited -lt 15 ]; do
+        sleep 1
+        waited=$((waited + 1))
+    done
     if id amule &>/dev/null; then
         echo "amule"
         return 0
@@ -83,7 +88,7 @@ with open(config_path, "w") as f:
 EOF
     sed -i "s/Port=4662/Port=$ED2K_PORT/g" /config/amule/amule.conf
     sed -i "s/UDPPort=4672/UDPPort=$ED2K_PORT/g" /config/amule/amule.conf
-    echo $'/tmp/shared\n/downloads/complete' > /config/amule/shareddir.dat
+    echo $'/tmp/shared\n/downloads/complete'| cat>| /config/amule/shareddir.dat
     rm -f /config/amule/muleLock
     rm -f /config/amule/ipfilter* # remove when bug is fixed
     chown -R "${PUID}:${PGID}" /home/amule/.aMule
