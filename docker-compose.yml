@@ -49,7 +49,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - IMG_VER=2025-01-01_fafafaf
+        - IMG_VER=3.0.0-1
     image: isc30/emulerr:latest
     container_name: emulerr
     restart: unless-stopped
@@ -76,7 +76,7 @@ services:
       # - ./tmp:/emulerr-dev/node_modules # DEV mount
       - type: bind # DEV mount
         source: ./src/amule/api.php
-        target: /usr/share/amule/webserver/AmuleWebUI-Reloaded/api.php
+        target: /usr/share/amule/webserver/default/api.php
       - type: bind # DEV mount
         source: ./src/entrypoint.sh
         target: /home/entrypoint.sh

@@ -1,4 +1,4 @@
-FROM ngosang/amule:2.3.3-19 AS amule
+FROM ngosang/amule:3.0.0-1 AS amule
 ENV PUID=1000
 ENV PGID=1000
 ENV GUI_PWD=secret
@@ -7,11 +7,10 @@ ENV MOD_AUTO_RESTART_ENABLED=true
 ENV MOD_AUTO_RESTART_CRON="0 6 * * *"
 ENV MOD_AUTO_SHARE_ENABLED=true
 ENV MOD_AUTO_SHARE_DIRECTORIES=/shared;/downloads/complete
-ENV MOD_FIX_KAD_GRAPH_ENABLED=true
-ENV MOD_FIX_KAD_BOOTSTRAP_ENABLED=true
 RUN mkdir -p /shared
 RUN mkdir -p /downloads/complete
-COPY ./src/amule/api.php /usr/share/amule/webserver/AmuleWebUI-Reloaded/api.php
+RUN mkdir -p /config-base/amule
+COPY ./src/amule/api.php /usr/share/amule/webserver/default/api.php
 COPY ./src/amule/amule.conf /config-base/amule/amule.conf
 RUN mkdir -p /config/amule
 RUN ln -s /config/amule /home/amule/.aMule
@@ -28,11 +27,9 @@ FROM amule
 ARG IMG_VER
 ENV IMG_VER=${IMG_VER}
 USER root
-RUN apk update
-RUN apk upgrade
-RUN apk add --update nodejs npm
-RUN apk add --no-cache bash
-RUN apk add --no-cache python3
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nodejs npm python3 \
+    && rm -rf /var/lib/apt/lists/*
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV ED2K_PORT=4662

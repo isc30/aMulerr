@@ -88,7 +88,6 @@ with open(config_path, "w") as f:
 EOF
     sed -i "s/Port=4662/Port=$ED2K_PORT/g" /config/amule/amule.conf
     sed -i "s/UDPPort=4672/UDPPort=$ED2K_PORT/g" /config/amule/amule.conf
-    echo $'/tmp/shared\n/downloads/complete'| cat>| /config/amule/shareddir.dat
     rm -f /config/amule/muleLock
     rm -f /config/amule/ipfilter* # remove when bug is fixed
     chown -R "${PUID}:${PGID}" /home/amule/.aMule
