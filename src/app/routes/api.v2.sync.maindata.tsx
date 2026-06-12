@@ -1,4 +1,6 @@
-import { ActionFunction, json } from "@remix-run/node"
+import { LoaderFunction, ActionFunction, json } from "@remix-run/node"
 
-export const action = (() =>
-  json({ rid: 0, full_update: false })) satisfies ActionFunction
+const handler = () => json({ rid: 0, full_update: false })
+
+export const loader = handler satisfies LoaderFunction
+export const action = handler satisfies ActionFunction

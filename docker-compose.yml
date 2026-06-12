@@ -59,7 +59,7 @@ services:
       - PGID=1000
       - PORT=3000 # optional, default=3000
       - ED2K_PORT=4762 # optional, default=4662
-      - LOG_LEVEL=info # optional, default=info
+      - LOG_LEVEL=trace # optional, default=info
       - PASSWORD=1234 # optional, user=emulerr
     ports:
       - "3000:3000" # web ui

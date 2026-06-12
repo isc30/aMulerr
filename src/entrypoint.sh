@@ -90,9 +90,13 @@ EOF
     sed -i "s/UDPPort=4672/UDPPort=$ED2K_PORT/g" /config/amule/amule.conf
     rm -f /config/amule/muleLock
     rm -f /config/amule/ipfilter* # remove when bug is fixed
+    rm -f /config/amule/shareddir-recursive.dat # remove old read-only file from previous aMule versions
     chown -R "${PUID}:${PGID}" /home/amule/.aMule
+    chmod -R u+w /home/amule/.aMule
     chown -R "${PUID}:${PGID}" /config
+    chmod -R u+w /config
     chown -R "${PUID}:${PGID}" /downloads
+    chmod -R u+w /downloads
     mkdir -p /downloads/complete
 }
 

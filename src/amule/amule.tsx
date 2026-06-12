@@ -12,10 +12,25 @@ import { z } from "zod"
 import { wait } from "~/utils/time"
 
 async function fetchTimeout(url: string, init: RequestInit, ms: number) {
+  let timedOut = false
   const controller = new AbortController()
-  const promise = fetch(url, { ...init, signal: controller.signal })
-  const timeout = setTimeout(() => controller.abort(), ms)
-  return await promise.finally(() => clearTimeout(timeout))
+  const promise = fetch(url, { ...init, signal: controller.signal }).catch(
+    (err) => {
+      if (timedOut) {
+        throw new Error("Request timeout")
+      }
+      throw err
+    }
+  )
+  const timeout = setTimeout(() => {
+    timedOut = true
+    try {
+      controller.abort()
+    } catch (err) {
+      logger.debug("Failed to abort request:", err)
+    }
+  }, ms)
+  return promise.finally(() => clearTimeout(timeout))
 }
 
 async function fetchAmuleApiRaw(
@@ -51,9 +66,13 @@ async function fetchAmuleApi<Output>(
 }
 
 async function getAuth() {
-  const cookie = await fetchAmuleApiRaw(`${host}/?pass=${pass}`, {}).then(
-    (r) => r.headers.get("Set-Cookie")!
-  )
+  const cookie = await fetchAmuleApiRaw(`${host}/`, {
+    method: "POST",
+    body: `pass=${pass}`,
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+  }).then((r) => r.headers.get("Set-Cookie")!)
 
   return {
     headers: {
