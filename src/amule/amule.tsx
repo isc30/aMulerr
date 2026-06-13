@@ -3,6 +3,7 @@ const host = "http://127.0.0.1:4711"
 
 import { promisify } from "util"
 import { exec } from "child_process"
+import { request as httpRequest } from "http"
 import { decode } from "html-entities"
 import { AmuleCategory } from "./amule.types"
 import { Mutex } from "async-mutex"
@@ -11,26 +12,26 @@ import { logger } from "~/utils/logger"
 import { z } from "zod"
 import { wait } from "~/utils/time"
 
-async function fetchTimeout(url: string, init: RequestInit, ms: number) {
-  let timedOut = false
-  const controller = new AbortController()
-  const promise = fetch(url, { ...init, signal: controller.signal }).catch(
-    (err) => {
-      if (timedOut) {
-        throw new Error("Request timeout")
-      }
-      throw err
-    }
-  )
-  const timeout = setTimeout(() => {
-    timedOut = true
-    try {
-      controller.abort()
-    } catch (err) {
-      logger.debug("Failed to abort request:", err)
-    }
-  }, ms)
-  return promise.finally(() => clearTimeout(timeout))
+async function fetchTimeout(url: string, init: RequestInit, ms: number = 30000) {
+  // No AbortController here: aborting an in-flight request makes the
+  // web-fetch polyfill reject an internal stream promise that nothing
+  // handles, crashing the process. Instead we race a plain timer and let
+  // the amule restart (triggered by the caller on timeout) close the
+  // dangling socket.
+  let timeout: NodeJS.Timeout
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeout = setTimeout(() => reject(new Error("Request timeout")), ms)
+  })
+
+  const fetchPromise = fetch(url, init)
+  // swallow late rejections from a request that already lost the race
+  fetchPromise.catch(() => {})
+
+  try {
+    return await Promise.race([fetchPromise, timeoutPromise])
+  } finally {
+    clearTimeout(timeout!)
+  }
 }
 
 async function fetchAmuleApiRaw(
@@ -39,7 +40,7 @@ async function fetchAmuleApiRaw(
   retry = true
 ) {
   try {
-    return await fetchTimeout(url.toString(), init, 30000)
+    return await fetchTimeout(url.toString(), init)
   } catch {
     await restartAmule()
 
@@ -65,20 +66,57 @@ async function fetchAmuleApi<Output>(
   return zodType.parse(json)
 }
 
-async function getAuth() {
-  const cookie = await fetchAmuleApiRaw(`${host}/`, {
-    method: "POST",
-    body: `pass=${pass}`,
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-  }).then((r) => r.headers.get("Set-Cookie")!)
+// aMule 3.0's webserver parses request headers case-sensitively: the
+// lowercase content-length sent by fetch makes it wait for the body
+// forever. Use http.request, which preserves header casing, for the
+// login POST.
+function postLogin(ms: number = 30000) {
+  return new Promise<string>((resolve, reject) => {
+    const body = `pass=${pass}`
+    const req = httpRequest(
+      `${host}/`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Content-Length": Buffer.byteLength(body).toString(),
+        },
+        timeout: ms,
+      },
+      (res) => {
+        res.resume()
+        const cookie = res.headers["set-cookie"]?.[0]?.split(";")[0]
+        if (cookie) {
+          resolve(cookie)
+        } else {
+          reject(new Error("No session cookie in login response"))
+        }
+      }
+    )
+    req.on("timeout", () => req.destroy(new Error("Request timeout")))
+    req.on("error", reject)
+    req.end(body)
+  })
+}
 
-  return {
-    headers: {
-      cookie,
-    },
-  } satisfies RequestInit
+async function getAuth(retry = true): Promise<RequestInit> {
+  try {
+    const cookie = await postLogin()
+
+    return {
+      headers: {
+        cookie,
+      },
+    } satisfies RequestInit
+  } catch {
+    await restartAmule()
+
+    if (retry) {
+      return await getAuth(false)
+    } else {
+      throw "Unable to connect to amule"
+    }
+  }
 }
 
 const restartMutex = new Mutex()

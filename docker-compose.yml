@@ -67,6 +67,7 @@ services:
       - "4665:4665/udp" # ed2k global search udp (tcp port +3)
       - "4672:4672/udp" # ed2k udp
       - "4711:4711" # DEV, amule webui
+      - "24678:24678" # DEV, vite
     volumes:
       - ./volume/config:/config
       - ./volume/data/usenet:/downloads
