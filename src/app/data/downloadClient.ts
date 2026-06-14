@@ -41,10 +41,17 @@ function setPausedByApi(hash: string, paused: boolean) {
   metadataDb.data[hash] = next
 }
 
-async function filterKnownDownloadHashes(
-  hashes: string[]
+export type TorrentHashSelection = "all" | string[]
+
+export async function resolveKnownDownloadHashes(
+  selection: TorrentHashSelection
 ): Promise<string[]> {
   const downloads = await amuleGetDownloads()
+
+  if (selection === "all") {
+    return [...new Set(downloads.map((download) => download.hash))]
+  }
+
   const knownHashes = new Map(
     downloads.map((download) => [
       download.hash.toUpperCase(),
@@ -52,15 +59,13 @@ async function filterKnownDownloadHashes(
     ])
   )
 
-  return [
-    ...new Set(hashes.map((hash) => hash.toUpperCase())),
-  ]
+  return [...new Set(selection.map((hash) => hash.toUpperCase()))]
     .map((hash) => knownHashes.get(hash))
     .filter((hash): hash is string => Boolean(hash))
 }
 
-export async function pauseTorrents(hashes: string[]) {
-  const knownHashes = await filterKnownDownloadHashes(hashes)
+export async function pauseTorrents(selection: TorrentHashSelection) {
+  const knownHashes = await resolveKnownDownloadHashes(selection)
 
   await Promise.all(
     knownHashes.map(async (hash) => {
@@ -70,8 +75,8 @@ export async function pauseTorrents(hashes: string[]) {
   )
 }
 
-export async function resumeTorrents(hashes: string[]) {
-  const knownHashes = await filterKnownDownloadHashes(hashes)
+export async function resumeTorrents(selection: TorrentHashSelection) {
+  const knownHashes = await resolveKnownDownloadHashes(selection)
 
   await Promise.all(
     knownHashes.map(async (hash) => {

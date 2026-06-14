@@ -1,5 +1,8 @@
-import { amuleGetDownloads } from "amule/amule"
-import { pauseTorrents, resumeTorrents } from "~/data/downloadClient"
+import {
+  pauseTorrents,
+  resumeTorrents,
+  type TorrentHashSelection,
+} from "~/data/downloadClient"
 import { logger } from "~/utils/logger"
 
 export type ParsedTorrentHashes =
@@ -51,16 +54,15 @@ export function parseTorrentHashesFromFormData(
   return { kind: "hashes", hashes }
 }
 
-export async function resolveTorrentHashes(
+function toTorrentHashSelection(
   parsed: ParsedTorrentHashes
-): Promise<string[]> {
+): TorrentHashSelection | null {
   if (parsed.kind === "none") {
-    return []
+    return null
   }
 
   if (parsed.kind === "all") {
-    const downloads = await amuleGetDownloads()
-    return downloads.map((download) => download.hash)
+    return "all"
   }
 
   return parsed.hashes
@@ -93,13 +95,13 @@ export async function handleTorrentStateAction(
   logger.debug("Path", url.pathname)
   const formData = await readTorrentStateFormData(request)
   const parsed = parseTorrentHashesFromFormData(formData)
-  const hashes = await resolveTorrentHashes(parsed)
+  const selection = toTorrentHashSelection(parsed)
 
-  if (hashes.length) {
+  if (selection) {
     if (state === "pause") {
-      await pauseTorrents(hashes)
+      await pauseTorrents(selection)
     } else {
-      await resumeTorrents(hashes)
+      await resumeTorrents(selection)
     }
   }
 
