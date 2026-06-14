@@ -41,9 +41,29 @@ function setPausedByApi(hash: string, paused: boolean) {
   metadataDb.data[hash] = next
 }
 
+async function filterKnownDownloadHashes(
+  hashes: string[]
+): Promise<string[]> {
+  const downloads = await amuleGetDownloads()
+  const knownHashes = new Map(
+    downloads.map((download) => [
+      download.hash.toUpperCase(),
+      download.hash,
+    ])
+  )
+
+  return [
+    ...new Set(hashes.map((hash) => hash.toUpperCase())),
+  ]
+    .map((hash) => knownHashes.get(hash))
+    .filter((hash): hash is string => Boolean(hash))
+}
+
 export async function pauseTorrents(hashes: string[]) {
+  const knownHashes = await filterKnownDownloadHashes(hashes)
+
   await Promise.all(
-    hashes.map(async (hash) => {
+    knownHashes.map(async (hash) => {
       await amuleDoPause(hash)
       setPausedByApi(hash, true)
     })
@@ -51,8 +71,10 @@ export async function pauseTorrents(hashes: string[]) {
 }
 
 export async function resumeTorrents(hashes: string[]) {
+  const knownHashes = await filterKnownDownloadHashes(hashes)
+
   await Promise.all(
-    hashes.map(async (hash) => {
+    knownHashes.map(async (hash) => {
       await amuleDoResume(hash)
       setPausedByApi(hash, false)
     })

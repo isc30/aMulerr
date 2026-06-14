@@ -40,8 +40,13 @@ export function parseTorrentHashesFromFormData(
         .map((part) => part.trim())
         .filter(Boolean)
         .map(normalizeQbittorrentHash)
+        .filter((hash) => /^[0-9A-F]{32}$/.test(hash))
     ),
   ]
+
+  if (!hashes.length) {
+    return { kind: "none" }
+  }
 
   return { kind: "hashes", hashes }
 }
