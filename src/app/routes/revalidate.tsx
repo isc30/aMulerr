@@ -1,6 +1,6 @@
 import { LoaderFunction } from "@remix-run/node"
 
-export const loader = (async ({ request }) => {
+export const loader = (async () => {
   return null
 }) satisfies LoaderFunction
 

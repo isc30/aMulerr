@@ -16,13 +16,9 @@ import { staleWhileRevalidate } from "~/utils/memoize"
 import {
   externalToInternalEd2kHash,
   type ParsedQbittorrentHashSelection,
+  selectionFromParsedHashes,
 } from "~/utils/qbittorrentHash"
-import {
-  COMPLETE_DOWNLOAD_ROOT,
-  INCOMPLETE_DOWNLOAD_ROOT,
-  resolveSafeFilePath,
-  SHARED_DOWNLOAD_ROOT,
-} from "~/utils/qbittorrentPathSafety"
+import { resolveDeletionFilePath } from "~/utils/qbittorrentDeletion"
 
 export type HashMetadata = {
   category: string
@@ -87,11 +83,25 @@ function clearRemovedFromApi(hash: string) {
   metadataDb.data[hash] = next
 }
 
+function persistAddedOn(hash: string) {
+  if (metadataDb.data[hash]?.addedOn !== undefined) {
+    return
+  }
+
+  const existing = metadataDb.data[hash]
+  metadataDb.data[hash] = {
+    category: existing?.category ?? "",
+    ...existing,
+    addedOn: Date.now(),
+  }
+}
+
 function persistCompletionOn(hash: string, completed: boolean) {
   if (!completed || metadataDb.data[hash]?.completionOn !== undefined) {
     return
   }
 
+  persistAddedOn(hash)
   const existing = metadataDb.data[hash]
   metadataDb.data[hash] = {
     category: existing?.category ?? "",
@@ -138,19 +148,7 @@ export async function resolveApiVisibleHashes(
     .filter((hash): hash is string => Boolean(hash))
 }
 
-export function selectionFromParsedHashes(
-  parsed: ParsedQbittorrentHashSelection
-): TorrentHashSelection | null {
-  if (parsed.kind === "none") {
-    return null
-  }
-
-  if (parsed.kind === "all") {
-    return "all"
-  }
-
-  return parsed.hashes
-}
+export { selectionFromParsedHashes }
 
 export async function pauseTorrents(selection: TorrentHashSelection) {
   const knownHashes = await resolveKnownDownloadHashes(selection)
@@ -182,8 +180,9 @@ export function invalidateAmuleClientFilesCache() {
 }
 
 const getAmuleClientFilesCached = staleWhileRevalidate(async function (
-  _generation: number
+  generation: number
 ) {
+  void generation
   const uploads = await amuleGetUploads()
   const downloads = [...(await amuleGetDownloads())]
   const shared = (await amuleGetShared())
@@ -245,6 +244,7 @@ export async function getDownloadClientFiles() {
         !permanentlyRemovedHashes.has(file.hash)
     )
     .map((file) => {
+      persistAddedOn(file.hash)
       persistCompletionOn(file.hash, file.progress >= 1)
       return {
         ...file,
@@ -319,6 +319,8 @@ export async function removeTorrents(
 
       if (!deleteFiles) {
         if (active) {
+          // aMule may leave partial data in /downloads/incomplete; only the API
+          // entry is removed here.
           await amuleDoDelete(hash)
         }
         markRemovedFromApi(hash)
@@ -328,7 +330,7 @@ export async function removeTorrents(
       await amuleDoDelete(hash)
 
       if (file.name) {
-        await deleteKnownFile(file.name)
+        await deleteSelectedKnownFile(file.name, isCompleted)
       }
 
       delete metadataDb.data[hash]
@@ -343,20 +345,18 @@ export async function removeTorrents(
   invalidateAmuleClientFilesCache()
 }
 
-async function deleteKnownFile(fileName: string) {
-  for (const root of [
-    COMPLETE_DOWNLOAD_ROOT,
-    SHARED_DOWNLOAD_ROOT,
-    INCOMPLETE_DOWNLOAD_ROOT,
-  ]) {
-    const safePath = resolveSafeFilePath(root, fileName)
-    if (safePath && existsSync(safePath)) {
-      await unlink(safePath).catch(() => void 0)
-    }
+async function deleteSelectedKnownFile(
+  fileName: string,
+  isCompleted: boolean
+): Promise<void> {
+  const targetPath = resolveDeletionFilePath(fileName, isCompleted, existsSync)
+  if (!targetPath) {
+    return
   }
+
+  await unlink(targetPath)
 }
 
-// Backward-compatible alias used by existing routes during transition.
 export async function remove(hashes: string[], deleteFiles = true) {
   await removeTorrents(hashes, deleteFiles)
 }
@@ -364,3 +364,5 @@ export async function remove(hashes: string[], deleteFiles = true) {
 export function setCategory(hash: string, category: string) {
   metadataDb.data[hash] = spreadMetadata(hash, { category })
 }
+
+export type { ParsedQbittorrentHashSelection }

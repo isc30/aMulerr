@@ -31,7 +31,7 @@ export function toEd2kLink(hash: string, name: string, size: number) {
 
 export function fromEd2kLink(ed2kLink: string) {
   const extractEd2kLinkInfo =
-    /ed2k:\/\/\|file\|(?<name>[^\|]+)\|(?<size>[^\|]+)\|(?<hash>[^\|]+)\|/
+    /ed2k:\/\/\|file\|(?<name>[^|]+)\|(?<size>[^|]+)\|(?<hash>[^|]+)\|/
 
   const { hash, name, size } = extractEd2kLinkInfo.exec(ed2kLink)?.groups ?? {}
 

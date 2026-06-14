@@ -21,7 +21,7 @@ import { AddIcon } from "~/icons/addIcon"
 import { getCategories } from "~/data/categories"
 import { getDownloadClientFiles } from "~/data/downloadClient"
 
-export const action = (async ({ request }) => {
+export const action = (async () => {
   void restartAmule().catch(() => {})
   return null
 }) satisfies ActionFunction
@@ -156,7 +156,14 @@ export default function Layout() {
       <div
         data-hidden={menuHidden}
         className="fixed left-0 top-0 z-30 hidden h-full w-full backdrop-blur-sm data-[hidden=false]:block sm:data-[hidden=false]:hidden"
+        role="button"
+        tabIndex={0}
         onClick={() => setMenuHidden(true)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            setMenuHidden(true)
+          }
+        }}
       ></div>
       <nav
         className="fixed top-[60px] z-40 flex h-[calc(100%-60px)] w-[250px] flex-col bg-neutral-800 max-sm:transition-transform max-sm:data-[hidden=true]:-translate-x-full"

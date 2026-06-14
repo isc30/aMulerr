@@ -1,7 +1,10 @@
 import { LoaderFunction, json } from "@remix-run/node"
 import { getDownloadClientFiles } from "~/data/downloadClient"
 import { buildQbittorrentTorrentInfo } from "~/utils/qbittorrentTorrentResponse"
-import { parseQbittorrentHashSelection } from "~/utils/qbittorrentHash"
+import {
+  hashSelectionMatchesFile,
+  parseQbittorrentHashQuery,
+} from "~/utils/qbittorrentHash"
 import { logger } from "~/utils/logger"
 
 export const loader = (async ({ request }) => {
@@ -9,7 +12,8 @@ export const loader = (async ({ request }) => {
   logger.debug("Path", url.pathname)
 
   const category = url.searchParams.get("category")
-  const hashSelection = parseQbittorrentHashSelection(
+  const hashSelection = parseQbittorrentHashQuery(
+    url.searchParams.has("hashes"),
     url.searchParams.get("hashes")
   )
   const files = await getDownloadClientFiles()
@@ -21,14 +25,7 @@ export const loader = (async ({ request }) => {
           return false
         }
 
-        if (hashSelection.kind === "hashes") {
-          const wanted = new Set(
-            hashSelection.hashes.map((hash) => hash.toUpperCase())
-          )
-          return wanted.has(file.hash.toUpperCase())
-        }
-
-        return true
+        return hashSelectionMatchesFile(hashSelection, file.hash)
       })
       .map((file) => buildQbittorrentTorrentInfo(file))
       .filter((entry) => entry !== null)

@@ -2,6 +2,7 @@ import { amuleGetCategories, restartAmule } from "amule/amule"
 import { Mutex } from "async-mutex"
 
 declare global {
+    // eslint-disable-next-line no-var -- global augmentation requires var
     var detectBrokenAmuleMutex: Mutex
 }
 

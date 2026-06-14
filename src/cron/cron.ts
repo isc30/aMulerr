@@ -19,6 +19,7 @@ const jobs = [
 
 // Using global as live reload will re-run the file, and variables get lost
 declare global {
+  // eslint-disable-next-line no-var -- global augmentation requires var
   var cronJobIntervalIds: NodeJS.Timeout[] | undefined
 }
 

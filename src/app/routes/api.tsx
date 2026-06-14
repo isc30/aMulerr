@@ -38,6 +38,7 @@ async function handleTorznabRequest(request: Request) {
 }
 
 function caps(_url: URL) {
+  void _url
   return `
 <caps xmlns:torznab="http://torznab.com/schemas/2015/feed">
   <server version="1.0" title="eMulerr" strapline="eMulerr" />

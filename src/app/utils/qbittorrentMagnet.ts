@@ -89,7 +89,7 @@ export function parseSyntheticMagnetLink(magnetLink: string): {
 
   return {
     hash,
-    name: decodeURIComponent(dn),
+    name: dn,
     size,
   }
 }

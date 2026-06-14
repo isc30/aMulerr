@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { writeFile, chown, mkdir, rename, rm } from "node:fs/promises"
 import { readFileSync, existsSync } from "node:fs"
 import { dirname } from "path"
@@ -27,7 +28,9 @@ export function createJsonDb<Schema>(
     } else if (state.data && initialState instanceof Set && Array.isArray(state.data)) {
       state.data = new Set(state.data) as Schema
     }
-  } catch { }
+  } catch {
+    // Ignore unreadable metadata files and fall back to defaults.
+  }
 
   state.data = initializer ? initializer(state.data) : state.data
 

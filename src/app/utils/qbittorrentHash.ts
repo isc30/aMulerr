@@ -6,9 +6,11 @@ const INTERNAL_HASH_RE = /^[0-9A-F]{32}$/
 const EXTERNAL_HASH_RE = /^[0-9A-F]{40}$/
 
 export type ParsedQbittorrentHashSelection =
-  | { kind: "none" }
+  | { kind: "absent" }
+  | { kind: "empty" }
   | { kind: "all" }
   | { kind: "hashes"; hashes: string[] }
+  | { kind: "invalid" }
 
 export function normalizeInternalEd2kHash(value: string): string | null {
   const hash = value.trim().toUpperCase()
@@ -43,13 +45,13 @@ export function externalToInternalEd2kHash(value: string): string | null {
 export function parseQbittorrentHashSelection(
   value: string | null | undefined
 ): ParsedQbittorrentHashSelection {
-  if (typeof value !== "string") {
-    return { kind: "none" }
+  if (value === null || value === undefined) {
+    return { kind: "empty" }
   }
 
   const raw = value.trim()
   if (!raw) {
-    return { kind: "none" }
+    return { kind: "empty" }
   }
 
   if (raw.toLowerCase() === "all") {
@@ -68,14 +70,61 @@ export function parseQbittorrentHashSelection(
   ]
 
   if (!hashes.length) {
-    return { kind: "none" }
+    return { kind: "invalid" }
   }
 
   return { kind: "hashes", hashes }
 }
 
+export function parseQbittorrentHashQuery(
+  hashesParamPresent: boolean,
+  value: string | null
+): ParsedQbittorrentHashSelection {
+  if (!hashesParamPresent) {
+    return { kind: "absent" }
+  }
+
+  return parseQbittorrentHashSelection(value)
+}
+
 export function parseTorrentHashesFromFormData(
   formData: FormData
 ): ParsedQbittorrentHashSelection {
+  if (!formData.has("hashes")) {
+    return { kind: "absent" }
+  }
+
   return parseQbittorrentHashSelection(formData.get("hashes")?.toString())
+}
+
+export function selectionFromParsedHashes(
+  parsed: ParsedQbittorrentHashSelection
+): "all" | string[] | null {
+  if (parsed.kind === "all") {
+    return "all"
+  }
+
+  if (parsed.kind === "hashes") {
+    return parsed.hashes
+  }
+
+  return null
+}
+
+export function hashSelectionMatchesFile(
+  selection: ParsedQbittorrentHashSelection,
+  fileHash: string
+): boolean {
+  switch (selection.kind) {
+    case "absent":
+    case "all":
+      return true
+    case "empty":
+    case "invalid":
+      return false
+    case "hashes": {
+      const wanted = new Set(selection.hashes.map((hash) => hash.toUpperCase()))
+      return wanted.has(fileHash.toUpperCase())
+    }
+  }
 }

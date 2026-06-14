@@ -17,5 +17,5 @@ export function useRevalidate(enabled: boolean, time: number) {
       const i = setInterval(revalidate, time)
       return () => clearInterval(i)
     }
-  }, [revalidate, enabled])
+  }, [revalidate, enabled, time])
 }

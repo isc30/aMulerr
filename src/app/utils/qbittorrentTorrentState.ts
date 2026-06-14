@@ -5,6 +5,7 @@ import {
 } from "~/data/downloadClient"
 import {
   parseTorrentHashesFromFormData,
+  selectionFromParsedHashes,
   type ParsedQbittorrentHashSelection,
 } from "~/utils/qbittorrentHash"
 import { logger } from "~/utils/logger"
@@ -14,20 +15,13 @@ export type { ParsedQbittorrentHashSelection as ParsedTorrentHashes }
 export {
   parseTorrentHashesFromFormData,
   parseQbittorrentHashSelection,
+  parseQbittorrentHashQuery,
 } from "~/utils/qbittorrentHash"
 
 function toTorrentHashSelection(
   parsed: ParsedQbittorrentHashSelection
 ): TorrentHashSelection | null {
-  if (parsed.kind === "none") {
-    return null
-  }
-
-  if (parsed.kind === "all") {
-    return "all"
-  }
-
-  return parsed.hashes
+  return selectionFromParsedHashes(parsed)
 }
 
 function rejectNonPostMethod(): Response {

@@ -50,6 +50,7 @@ export default function Search() {
             defaultValue={q}
             disabled={state !== "idle"}
             required
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- search page primary input
             autoFocus
           />
           <button

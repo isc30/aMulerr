@@ -23,7 +23,9 @@ declare global {
   /**
    * Default log level is "debug"
    */
+  // eslint-disable-next-line no-var -- global augmentation requires var
   var logLevel: LogLevelValue | undefined
+  // eslint-disable-next-line no-var -- global augmentation requires var
   var originalConsole: Console
 }
 

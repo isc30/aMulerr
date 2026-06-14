@@ -24,7 +24,7 @@ export function sanitizeQuery(q: string | undefined | null) {
   }
 
   return sanitizeUnicode(q)
-    .replace(/[^\w \(\)'-]/g, " ")
+    .replace(/[^\w ()'-]/g, " ")
     .replace(/ +/g, " ")
     .trim()
 }
@@ -35,7 +35,7 @@ export function sanitizeFilename(str: string) {
   str = sanitizeUnicode(str)
 
   // fix utf8 decoding artifacts
-  while (true) {
+  for (;;) {
     try {
       const nstr = decodeURIComponent(escape(str));
       if (nstr === str) {

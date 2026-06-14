@@ -28,10 +28,12 @@ export function deepFreeze<T>(obj: T): T {
     try {
         // Freeze self
         Object.freeze(obj);
-    } catch { }
+    } catch {
+        // Some objects cannot be frozen in every runtime.
+    }
 
     Object.getOwnPropertyNames(obj).forEach((name) => {
-        const prop = (obj as any)[name];
+        const prop = (obj as Record<string, unknown>)[name];
         const type = typeof prop;
 
         // Freeze prop if it is an object or function and also not already frozen

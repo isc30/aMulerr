@@ -5,7 +5,6 @@ import {
   Scripts,
   ScrollRestoration,
   useNavigate,
-  useRouteError,
 } from "@remix-run/react"
 
 import stylesheet from "~/global.css?url"
@@ -51,5 +50,5 @@ export function ErrorBoundary() {
 
   useEffect(() => {
     navigate(".", { replace: true })
-  }, [])
+  }, [navigate])
 }

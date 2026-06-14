@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import ExpiryMap from "expiry-map"
 import memoize from "memoize"
 import pMemoize, { AnyAsyncFunction } from "p-memoize"
