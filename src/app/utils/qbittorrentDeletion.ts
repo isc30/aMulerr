@@ -25,3 +25,18 @@ export function resolveDeletionFilePath(
 
   return null
 }
+
+export async function unlinkExistingFile(
+  targetPath: string,
+  unlinkFn: (path: string) => Promise<void>
+): Promise<void> {
+  try {
+    await unlinkFn(targetPath)
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      return
+    }
+
+    throw error
+  }
+}

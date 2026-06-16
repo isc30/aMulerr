@@ -32,8 +32,9 @@ export const itemsResponse = (
   <rss version="2.0" xmlns:torznab="http://torznab.com/schemas/2015/feed">
     <channel>
       <torznab:response offset="0" total="${searchResults.length}"/>
-      ${searchResults.map(
-        (item) => `
+      ${searchResults
+        .map(
+          (item) => `
           <item>
             <title>${encode(item.name)}</title>
             <guid>${item.hash}-${encode(item.name)}</guid>
@@ -50,7 +51,8 @@ export const itemsResponse = (
             <torznab:attr name="minimumseedtime" value="0" />
             <torznab:attr name="tag" value="freeleech" />
           </item>`
-      )}
+        )
+        .join("")}
     </channel>
   </rss>
   `

@@ -90,4 +90,28 @@ describe("torznabFeed publication support", () => {
     assert.match(xml, /Revue été 2024\.pdf/)
     assertWellFormedRss(xml)
   })
+
+  it("joins multiple items without comma separators", () => {
+    const trickyName = 'Hackable & "N°02".pdf'
+    const trickyMagnet =
+      "magnet:?xt=urn:btih:abc&dn=Hackable%20%26%20Test&tr=http://emulerr"
+    const xml = itemsResponse(
+      [
+        sampleItem("Hackable Magazine 01.pdf"),
+        {
+          ...sampleItem(trickyName),
+          magnetLink: trickyMagnet,
+        },
+      ],
+      [7000]
+    )
+
+    const itemCount = (xml.match(/<item>/g) ?? []).length
+    assert.equal(itemCount, 2)
+    assert.doesNotMatch(xml, /<\/item>,\s*<item>/)
+    assert.match(xml, /Hackable Magazine 01\.pdf/)
+    assert.match(xml, /Hackable &amp; &quot;N°02&quot;\.pdf/)
+    assert.match(xml, /value="magnet:\?xt=urn:btih:abc&amp;dn=/)
+    assertWellFormedRss(xml)
+  })
 })

@@ -5,6 +5,7 @@ import {
   parseSyntheticMagnetLink,
 } from "~/utils/qbittorrentMagnet"
 import { logger } from "~/utils/logger"
+import { parseTorrentAddOptions } from "~/utils/qbittorrentTorrentAdd"
 
 async function readTorrentAddFormData(request: Request): Promise<FormData> {
   try {
@@ -31,10 +32,7 @@ export const action = (async ({ request }) => {
   }
 
   const urlsRaw = formData.get("urls")?.toString()
-  const category = formData.get("category")?.toString() ?? ""
-  const paused =
-    formData.get("paused")?.toString().trim().toLowerCase() === "true" ||
-    formData.get("stopped")?.toString().trim().toLowerCase() === "true"
+  const { category, paused } = parseTorrentAddOptions(formData)
 
   if (!urlsRaw?.trim()) {
     return new Response("Missing urls parameter", { status: 400 })

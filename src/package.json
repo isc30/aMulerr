@@ -9,7 +9,7 @@
     "lint": "eslint --resolve-plugins-relative-to . --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "cross-env NODE_ENV=production node ./server.js",
     "typecheck": "tsc",
-    "test": "tsx --test app/utils/qbittorrentHash.test.ts app/utils/qbittorrentMagnet.test.ts app/utils/qbittorrentBoolean.test.ts app/utils/qbittorrentTimestamps.test.ts app/utils/qbittorrentPathSafety.test.ts app/utils/qbittorrentDeletion.test.ts app/utils/qbittorrentTorrentResponse.test.ts app/utils/torznabFeed.test.ts"
+    "test": "tsx --test app/utils/qbittorrentHash.test.ts app/utils/qbittorrentMagnet.test.ts app/utils/qbittorrentBoolean.test.ts app/utils/qbittorrentTimestamps.test.ts app/utils/qbittorrentPathSafety.test.ts app/utils/qbittorrentDeletion.test.ts app/utils/qbittorrentTorrentResponse.test.ts app/utils/qbittorrentTorrentAdd.test.ts app/utils/torznabFeed.test.ts"
   },
   "dependencies": {
     "@bobthered/tailwindcss-palette-generator": "^3.2.3",

@@ -8,6 +8,7 @@ import {
 import {
   resolveDeletionFilePath,
   resolveDeletionTargetRoots,
+  unlinkExistingFile,
 } from "./qbittorrentDeletion.ts"
 
 describe("qbittorrentDeletion", () => {
@@ -45,5 +46,38 @@ describe("qbittorrentDeletion", () => {
       resolveDeletionFilePath("../secret.epub", true, () => true),
       null
     )
+  })
+
+  describe("unlinkExistingFile", () => {
+    it("treats ENOENT as already deleted", async () => {
+      const enoent = Object.assign(new Error("ENOENT"), { code: "ENOENT" })
+      let called = false
+      await unlinkExistingFile("/downloads/complete/missing.epub", async () => {
+        called = true
+        throw enoent
+      })
+      assert.equal(called, true)
+    })
+
+    it("propagates non-ENOENT unlink errors", async () => {
+      const eacces = Object.assign(new Error("EACCES"), { code: "EACCES" })
+      await assert.rejects(
+        unlinkExistingFile("/downloads/complete/locked.epub", async () => {
+          throw eacces
+        }),
+        /EACCES/
+      )
+    })
+
+    it("completes when unlink succeeds", async () => {
+      let removed: string | undefined
+      await unlinkExistingFile(
+        "/downloads/complete/book.epub",
+        async (path) => {
+          removed = path
+        }
+      )
+      assert.equal(removed, "/downloads/complete/book.epub")
+    })
   })
 })

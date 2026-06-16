@@ -18,7 +18,10 @@ import {
   type ParsedQbittorrentHashSelection,
   selectionFromParsedHashes,
 } from "~/utils/qbittorrentHash"
-import { resolveDeletionFilePath } from "~/utils/qbittorrentDeletion"
+import {
+  resolveDeletionFilePath,
+  unlinkExistingFile,
+} from "~/utils/qbittorrentDeletion"
 
 export type HashMetadata = {
   category: string
@@ -356,7 +359,7 @@ async function deleteSelectedKnownFile(
     return
   }
 
-  await unlink(targetPath)
+  await unlinkExistingFile(targetPath, unlink)
 }
 
 export async function remove(hashes: string[], deleteFiles = true) {
