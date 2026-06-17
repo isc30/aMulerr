@@ -148,17 +148,17 @@
             echo '{}';
             break;
         case "cancel":
-            $hash = $_GET["hash"];
+            $hash = get_valid_download_hash();
             amule_do_download_cmd($hash, 'cancel');
             echo '{}';
             break;
         case "resume":
-            $hash = $_GET["hash"];
+            $hash = get_valid_download_hash();
             amule_do_download_cmd($hash, 'resume');
             echo '{}';
             break;
         case "pause":
-            $hash = $_GET["hash"];
+            $hash = get_valid_download_hash();
             amule_do_download_cmd($hash, 'pause');
             echo '{}';
             break;
@@ -169,6 +169,18 @@
         case "reconnect":
             echo '{ TODO: 1 }';
             break;
+    }
+
+    function get_valid_download_hash() {
+        $hash = isset($_GET["hash"]) ? $_GET["hash"] : "";
+
+        if (!preg_match('/\A[0-9a-fA-F]{32}\z/', $hash)) {
+            http_response_code(400);
+            echo '{"error":"invalid hash"}';
+            exit;
+        }
+
+        return strtoupper($hash);
     }
 
     function str_value($value) {
