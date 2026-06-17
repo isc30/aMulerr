@@ -172,7 +172,13 @@
     }
 
     function get_valid_download_hash() {
-        $hash = isset($_GET["hash"]) ? $_GET["hash"] : "";
+        if (!isset($_GET["hash"]) || !is_string($_GET["hash"])) {
+            http_response_code(400);
+            echo '{"error":"invalid hash"}';
+            exit;
+        }
+
+        $hash = $_GET["hash"];
 
         if (!preg_match('/\A[0-9a-fA-F]{32}\z/', $hash)) {
             http_response_code(400);
