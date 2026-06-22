@@ -39,6 +39,8 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: isc30/amulerr
+          flavor: |
+            latest=false
           tags: |
             type=raw,value=latest,enable=${{ github.event_name != 'pull_request' }}
             type=raw,value=${{ env.IMG_VER }}
