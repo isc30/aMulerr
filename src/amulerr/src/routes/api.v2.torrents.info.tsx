@@ -68,9 +68,9 @@ function statusToQbittorrentState(
     case 10:
       return f.sourceCountXfer && f.sourceCountXfer > 0
         ? ("downloading" as const)
-        : f.progress && parseFloat(f.progress) < 1
+        : f.progress && parseFloat(f.progress) < 100
           ? ("stalledDL" as const)
-          : "downloading" as const
+          : "pausedUP" as const
     case 4:
     case 5:
     case 6:
