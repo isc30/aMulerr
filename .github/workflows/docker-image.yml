@@ -2,6 +2,8 @@ name: Docker Image CI
 on:
   push:
     branches: ["main"]
+  pull_request:
+    branches: ["main"]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,7 +20,13 @@ jobs:
 
       - name: Set imgver tag
         id: imgver
-        run: echo "IMG_VER=$(date +'%Y-%m-%d')_${{ env.SHA }}" >> $GITHUB_ENV
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            SAFE_BRANCH_NAME="$(echo "${{ github.head_ref }}" | tr '[:upper:]' '[:lower:]' | sed 's#[^a-z0-9._-]#-#g')"
+            echo "IMG_VER=feat_${SAFE_BRANCH_NAME}" >> $GITHUB_ENV
+          else
+            echo "IMG_VER=$(date +'%Y-%m-%d')_${{ env.SHA }}" >> $GITHUB_ENV
+          fi
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -32,7 +40,7 @@ jobs:
         with:
           images: isc30/amulerr
           tags: |
-            type=raw,value=latest
+            type=raw,value=latest,enable=${{ github.event_name == 'pull_request' }}
             type=raw,value=${{ env.IMG_VER }}
 
       - name: Build and push
