@@ -7,7 +7,7 @@ Integrate your *rr apps with aMule (eD2k/KAD). Compatible with:
 
 https://hub.docker.com/r/isc30/amulerr
 
-> aMulerr is the successor of eMulerr, which no longer exists.
+> aMulerr is the successor of eMulerr, which no longer exists. If you want a full UI for amule, try [AmuTorrent](https://github.com/got3nks/amutorrent)
 
 ## Example `docker-compose.yaml`
 
