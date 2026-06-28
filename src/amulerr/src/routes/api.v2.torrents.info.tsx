@@ -26,7 +26,7 @@ export const Route = createFileRoute('/api/v2/torrents/info')({
 
         const filterCategory = categories.find(c => c.title === categoryTitle)
         if (categoryTitle && !filterCategory) {
-          throw new Error(`Category ${categoryTitle} not found`)
+          return Response.json([])
         }
 
         const filteredDownloads = categoryTitle
