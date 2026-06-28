@@ -6,7 +6,7 @@ import { createFileRoute } from '@tanstack/react-router'
 export const Route = createFileRoute('/api/v2/torrents/createCategory')({
   server: {
     handlers: {
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         const formData = await request.formData()
         const categoryTitle = formData.get("category")?.toString()
 

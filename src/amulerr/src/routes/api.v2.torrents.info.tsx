@@ -6,7 +6,7 @@ import { createFileRoute } from '@tanstack/react-router'
 export const Route = createFileRoute('/api/v2/torrents/info')({
   server: {
     handlers: {
-      GET: async ({ request }) => {
+      GET: async ({ request }: { request: Request }) => {
         const url = new URL(request.url)
         const categoryTitle = url.searchParams.get("category")
 
