@@ -1,12 +1,13 @@
 
 import { useAmule } from '#/amule'
 import type { DownloadItem } from '#/amule-ec-node/AmuleClient.mjs'
+import { isHashDeleted } from '#/lib/deleted'
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/api/v2/torrents/info')({
   server: {
     handlers: {
-      GET: async ({ request }) => {
+      GET: async ({ request }: { request: Request }) => {
         const url = new URL(request.url)
         const categoryTitle = url.searchParams.get("category")
 
@@ -19,14 +20,14 @@ export const Route = createFileRoute('/api/v2/torrents/info')({
             categories,
             downloads: downloads.map(d => ({ ...d, category_obj: categories.find(c => c.id === d.category) })),
             shared: shared
-              .filter(s => !downloads.some(d => d.fileHash === s.fileHash))
+              .filter(s => s.fileHash && !isHashDeleted(s.fileHash) && !downloads.some(d => d.fileHash === s.fileHash))
               .map(d => ({ ...d, category_obj: categories.find(c => c.path === d.path) })),
           }
         })
 
         const filterCategory = categories.find(c => c.title === categoryTitle)
         if (categoryTitle && !filterCategory) {
-          throw new Error(`Category ${categoryTitle} not found`)
+          return Response.json([])
         }
 
         const filteredDownloads = categoryTitle

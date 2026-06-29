@@ -1,15 +1,22 @@
 
 import { useAmule } from '#/amule'
+import { ignoredCategories, isCategoryAllowed } from '#/lib/categories'
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/api/v2/torrents/createCategory')({
   server: {
     handlers: {
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         const formData = await request.formData()
         const categoryTitle = formData.get("category")?.toString()
 
         if (categoryTitle) {
+          if (!isCategoryAllowed(categoryTitle)) {
+            console.log(`Ignoring creation of category "${categoryTitle}" (not in allowed list)`);
+            ignoredCategories.add(categoryTitle);
+            return Response.json({})
+          }
+
           await useAmule(async (amule) => {
 
             const dummyCategory = Math.random().toString(36).substring(2)
@@ -38,3 +45,4 @@ export const Route = createFileRoute('/api/v2/torrents/createCategory')({
     }
   },
 })
+

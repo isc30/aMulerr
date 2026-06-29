@@ -23,6 +23,7 @@ services:
       - AMULE_HOST=amule
       - AMULE_PORT=4712
       - AMULE_PWD=api-secret # API Password
+      - ALLOWED_CATEGORIES=tv-sonarr-aMulerr,radarr-aMulerr # Optional: Filter categories to prevent contamination
     ports:
       - "3000:3000" # API
   amule:
@@ -48,6 +49,15 @@ volumes:
   downloads:
   amule_data:
 ```
+
+## Environment Variables
+
+| Variable | Description |
+| --- | --- |
+| `AMULE_HOST` | Hostname of the aMule container. |
+| `AMULE_PORT` | Port for External Connections (default: `4712`). |
+| `AMULE_PWD` | Password for External Connections (GUI_PWD in aMule). |
+| `ALLOWED_CATEGORIES` | Comma-separated list of categories allowed to be created/modified in aMule (e.g. `tv-sonarr,radarr,tv-4k`). If set, any category not matching this list will be ignored. |
 
 ## Configuring *rr
 
